@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Rodar API",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/GoodHamburger.Api/GoodHamburger.Api.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}

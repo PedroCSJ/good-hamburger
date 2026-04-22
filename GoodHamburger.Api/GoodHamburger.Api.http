@@ -1,0 +1,104 @@
+@GoodHamburger.Api_HostAddress = http://localhost:5251
+
+### Listar cardápio
+GET {{GoodHamburger.Api_HostAddress}}/api/menu
+Accept: application/json
+
+###
+
+### Listar todos os pedidos
+GET {{GoodHamburger.Api_HostAddress}}/api/orders
+Accept: application/json
+
+###
+
+### Criar pedido — combo completo (20% desconto)
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-burger", "fries", "soda"]
+}
+
+###
+
+### Criar pedido — sanduíche + refrigerante (15% desconto)
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-bacon", "soda"]
+}
+
+###
+
+### Criar pedido — sanduíche + batata (10% desconto)
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-egg", "fries"]
+}
+
+###
+
+### Criar pedido — só sanduíche (sem desconto)
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-burger"]
+}
+
+###
+
+### Buscar pedido por ID (substituir pelo ID real)
+GET {{GoodHamburger.Api_HostAddress}}/api/orders/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+###
+
+### Atualizar pedido (substituir pelo ID real)
+PUT {{GoodHamburger.Api_HostAddress}}/api/orders/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "itemIds": ["x-bacon", "fries", "soda"]
+}
+
+###
+
+### Remover pedido (substituir pelo ID real)
+DELETE {{GoodHamburger.Api_HostAddress}}/api/orders/00000000-0000-0000-0000-000000000000
+
+###
+
+### Erro — item duplicado
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-burger", "x-burger"]
+}
+
+###
+
+### Erro — dois sanduíches
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["x-burger", "x-bacon"]
+}
+
+###
+
+### Erro — pedido sem sanduíche
+POST {{GoodHamburger.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "itemIds": ["fries", "soda"]
+}
+
+###
