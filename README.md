@@ -1,77 +1,52 @@
-# Good Hamburger — Sistema de Pedidos
+# Good Hamburger
 
-API REST para registro e gerenciamento de pedidos da lanchonete Good Hamburger, construída com .NET 8 e ASP.NET Core.
+API de pedidos para a lanchonete Good Hamburger. .NET 8 + ASP.NET Core.
 
----
+## Rodando o projeto
 
-## Como executar
-
-**Pré-requisitos:** .NET 8 SDK
+Precisa ter o .NET 8 SDK instalado.
 
 ```bash
-# Clonar o repositório
 git clone <url-do-repositorio>
 cd GoodHamburger
-
-# Restaurar dependências
-dotnet restore
-
-# Rodar a API
 dotnet run --project GoodHamburger.Api
-
-# A API estará disponível em:
-# http://localhost:5251
-# Swagger UI: http://localhost:5251/swagger
 ```
 
-**Rodar os testes:**
+Sobe em `http://localhost:5251`. O Swagger fica em `http://localhost:5251/swagger`.
 
 ```bash
+# testes
 dotnet test
 ```
 
----
-
 ## Endpoints
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/api/menu` | Lista o cardápio completo |
-| `GET` | `/api/orders` | Lista todos os pedidos |
-| `GET` | `/api/orders/{id}` | Busca pedido por ID (GUID) |
-| `POST` | `/api/orders` | Cria um novo pedido |
-| `PUT` | `/api/orders/{id}` | Atualiza um pedido existente |
-| `DELETE` | `/api/orders/{id}` | Remove um pedido |
+| Método | Rota | |
+|---|---|---|
+| GET | `/api/menu` | cardápio |
+| GET | `/api/orders` | lista pedidos |
+| GET | `/api/orders/{id}` | pedido por id |
+| POST | `/api/orders` | cria pedido |
+| PUT | `/api/orders/{id}` | atualiza pedido |
+| DELETE | `/api/orders/{id}` | remove pedido |
 
-### GET /api/menu
+### Criar pedido
 
 ```json
-[
-  { "id": "x-burger", "name": "X Burger",     "price": 5.00, "category": "Sanduíche"      },
-  { "id": "x-egg",    "name": "X Egg",        "price": 4.50, "category": "Sanduíche"      },
-  { "id": "x-bacon",  "name": "X Bacon",      "price": 7.00, "category": "Sanduíche"      },
-  { "id": "fries",    "name": "Batata Frita", "price": 2.00, "category": "Acompanhamento" },
-  { "id": "soda",     "name": "Refrigerante", "price": 2.50, "category": "Acompanhamento" }
-]
-```
-
-### POST /api/orders — criar pedido
-
-**Request:**
-```json
+POST /api/orders
 {
   "itemIds": ["x-burger", "fries", "soda"]
 }
 ```
 
-**Response `201 Created`:**
+Resposta `201`:
 ```json
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "items": [
-    { "menuItemId": "x-burger", "name": "X Burger",    "unitPrice": 5.00 },
-    { "menuItemId": "fries",    "name": "Batata Frita", "unitPrice": 2.00 },
-    { "menuItemId": "soda",     "name": "Refrigerante", "unitPrice": 2.50 }
+    { "menuItemId": "x-burger", "name": "X Burger", "unitPrice": 5.00 },
+    { "menuItemId": "fries", "name": "Batata Frita", "unitPrice": 2.00 },
+    { "menuItemId": "soda", "name": "Refrigerante", "unitPrice": 2.50 }
   ],
   "subtotal": 9.50,
   "discountPercent": 20,
@@ -82,129 +57,45 @@ dotnet test
 }
 ```
 
-### PUT /api/orders/{id} — atualizar pedido
+IDs disponíveis: `x-burger`, `x-egg`, `x-bacon`, `fries`, `soda`.
 
-Substitui completamente os itens do pedido e recalcula desconto/total.
+O `PUT` tem o mesmo formato do `POST` e substitui os itens do pedido por completo.
 
-**Request:** mesmo formato do `POST`.
+### Erros
 
-### Respostas de erro
-
-| Situação | Status | Exemplo de mensagem |
-|---|---|---|
-| Pedido não encontrado | `404 Not Found` | `"Pedido {id} não encontrado."` |
-| Item duplicado no pedido | `400 Bad Request` | `"O pedido contém itens duplicados."` |
-| Dois sanduíches no pedido | `400 Bad Request` | `"O pedido só pode ter um sanduíche."` |
-| Pedido sem sanduíche | `400 Bad Request` | `"O pedido deve ter pelo menos um sanduíche."` |
-| ID de item inválido | `400 Bad Request` | `"Item '{id}' não encontrado no cardápio."` |
-
----
+- `404` — pedido não encontrado
+- `400` — item duplicado, dois sanduíches, pedido sem sanduíche, ID de item inválido
 
 ## Regras de negócio
 
-- Todo pedido deve ter **exatamente um** sanduíche (obrigatório)
-- Opcionalmente pode ter **uma** batata frita e/ou **um** refrigerante
-- Itens duplicados resultam em `400 Bad Request`
-
-### Tabela de descontos
+Todo pedido precisa ter exatamente um sanduíche. Batata e refrigerante são opcionais, no máximo um de cada.
 
 | Combinação | Desconto |
 |---|---|
 | Sanduíche + Batata + Refrigerante | 20% |
 | Sanduíche + Refrigerante | 15% |
 | Sanduíche + Batata | 10% |
-| Apenas Sanduíche | 0% |
+| Só sanduíche | 0% |
 
-O desconto é aplicado sobre o subtotal. Valores são arredondados com `Math.Round(..., 2)` (arredondamento bancário padrão do .NET — `MidpointRounding.ToEven`).
+Arredondamento com `Math.Round(..., 2)`. Exemplo: X Bacon + Refrigerante = R$9,50, 15% = R$1,425 → R$1,42, total R$8,08.
 
-**Exemplo de arredondamento:** X Bacon (R$ 7,00) + Refrigerante (R$ 2,50) = R$ 9,50. 15% de R$ 9,50 = R$ 1,425 → arredonda para R$ 1,42 → total R$ 8,08.
+## Decisões técnicas
 
----
+Arquitetura em camadas simples: Controller → Service → Repository. Não usei MediatR nem CQRS porque não faz sentido para o tamanho do projeto — seria só indireção desnecessária.
 
-## Arquitetura e decisões técnicas
+A lógica de desconto ficou numa classe estática `DiscountCalculator` separada do `OrderService` para conseguir testar as regras de desconto sem precisar instanciar o serviço inteiro.
 
-### Estrutura de pastas
+Usei repositório em memória com `ConcurrentDictionary` em vez de banco de dados. O enunciado não pede persistência e EF Core aqui seria setup pra nada. A interface `IOrderRepository` está desacoplada — pra trocar por banco de dados é só criar uma nova implementação e registrar no `Program.cs`.
 
-```
-GoodHamburger/
-├── GoodHamburger.Api/
-│   ├── Controllers/      # Camada HTTP — recebe requisições, mapeia erros para status codes
-│   ├── Domain/           # Entidades, enums e catálogo de itens
-│   ├── DTOs/             # Contratos de entrada e saída da API
-│   ├── Repositories/     # Abstração de persistência (interface + implementação em memória)
-│   └── Services/         # Regras de negócio (OrderService + DiscountCalculator)
-└── GoodHamburger.Tests/  # Testes unitários (xUnit + FluentAssertions)
-```
-
-### Arquitetura em camadas (Controller → Service → Repository)
-
-Optei por uma arquitetura em camadas simples e sem over-engineering. O fluxo é direto: o controller recebe a requisição HTTP, delega ao serviço, que aplica as regras de negócio e acessa o repositório. Para o escopo do desafio, isso é suficiente e fácil de navegar. Adicionar CQRS, MediatR ou qualquer outro pattern de indireção seria complexidade desnecessária — aqui não há múltiplos handlers para o mesmo caso de uso, nem pipeline behaviors.
-
-### DiscountCalculator separado do OrderService
-
-A lógica de desconto ficou em uma classe estática `DiscountCalculator` em vez de dentro do `OrderService`. A motivação é testabilidade: consigo testar todas as combinações de desconto de forma isolada, sem precisar instanciar o serviço ou mockar o repositório. O `DiscountCalculator` recebe um `Order` e muta os campos calculados diretamente — simples e direto.
-
-### Validações via exceções tipadas
-
-Em vez de um `Result<T>` pattern ou FluentValidation, optei por lançar exceções com mensagens claras (`KeyNotFoundException`, `InvalidOperationException`, `ArgumentException`) e capturá-las nos controllers com `try/catch` por tipo. Para uma API desta complexidade, essa abordagem é pragmática e legível. Um middleware global de exceções seria o próximo passo natural se o projeto crescesse.
-
-### Repositório em memória com `ConcurrentDictionary`
-
-Optei por `InMemoryOrderRepository` com `ConcurrentDictionary` ao invés de banco de dados. O enunciado não especifica persistência, e introduzir EF Core + banco de dados aumentaria o setup sem agregar nada às regras de negócio que precisavam ser demonstradas. O `ConcurrentDictionary` garante thread safety para requisições paralelas sem lock explícito. A interface `IOrderRepository` está desacoplada da implementação — trocar por EF Core seria uma questão de criar uma nova classe que implemente a mesma interface, sem tocar em nada além do `Program.cs`.
-
-### Primary constructors (C# 12)
-
-Controllers e serviços usam primary constructors para injeção de dependência. Reduz verbosidade sem perda de legibilidade — em vez de declarar campo privado + construtor + atribuição, tudo fica em uma linha na assinatura da classe.
-
-### Injeção de dependência
-
-- `IOrderRepository` registrado como `Singleton` — faz sentido para repositório em memória, já que o estado precisa persistir enquanto a aplicação estiver rodando.
-- `IOrderService` registrado como `Scoped` — ciclo de vida padrão para serviços que dependem de outros componentes.
-
-### Swagger habilitado em todos os ambientes
-
-Para um sistema interno de pedidos, deixar o Swagger ativo facilita testes rápidos sem precisar de Postman ou outro cliente. Em produção isso poderia ser restrito, mas não era o foco aqui.
-
-### CORS aberto (`AllowAnyOrigin`)
-
-Habilitado para permitir consumo da API por qualquer cliente frontend (Blazor, React, etc.) durante o desenvolvimento, sem configuração adicional. Em produção, seria substituído por uma política restrita com origins específicos.
-
----
+Erros são lançados como exceções tipadas no serviço e capturados nos controllers. Para esse tamanho de projeto é mais simples do que `Result<T>` ou FluentValidation.
 
 ## O que ficou fora
 
-- **Frontend Blazor** — opcional no enunciado. A API está completamente documentada via Swagger e o arquivo `.http` contém todos os exemplos de chamada. A interface pode ser adicionada depois consumindo os endpoints existentes sem modificações.
-- **Banco de dados** — a troca do repositório em memória por EF Core + SQLite seria uma nova implementação de `IOrderRepository` (~40 linhas) e o registro no `Program.cs`. As regras de negócio e a API não seriam tocadas.
-- **Autenticação/autorização** — não mencionado no escopo.
-- **Paginação** no `GET /orders` — irrelevante para o volume esperado em um sistema de lanchonete local.
-- **Integração tests (WebApplicationFactory)** — teria cobertura do pipeline HTTP completo, mas os 18 testes unitários já cobrem todos os cenários de negócio.
-
----
+- **Blazor** — opcional, a API está funcional e documentada via Swagger
+- **Banco de dados** — trocar o repositório em memória por EF Core não mexe em nada além do `Program.cs`
+- **Autenticação** — fora do escopo
+- **Testes de integração** — os 18 testes unitários cobrem todos os cenários de negócio
 
 ## Testes
 
-18 testes cobrindo:
-
-**`DiscountRulesTests` (6 testes):**
-- Todas as combinações de desconto: 20%, 15%, 10% e 0%
-- Verificação dos valores calculados com os preços reais do cardápio
-- Caso de arredondamento: X Bacon + Refrigerante com desconto de 15%
-
-**`OrderServiceTests` (12 testes):**
-- Criação de pedido válido retorna pedido com ID e total correto
-- Erro ao criar com item duplicado
-- Erro ao criar com ID de item desconhecido
-- Erro ao criar com dois sanduíches
-- Erro ao criar pedido sem sanduíche
-- `GetById` retorna pedido existente
-- `GetById` lança exceção para ID inexistente
-- `GetAll` retorna todos os pedidos criados
-- `Update` recalcula desconto corretamente e preenche `UpdatedAt`
-- `Update` lança exceção para ID inexistente
-- `Delete` remove o pedido com sucesso
-- `Delete` lança exceção para ID inexistente
-
-```bash
-dotnet test
-# 18 passed, 0 failed
-```
+18 testes no total. `DiscountRulesTests` cobre as 4 combinações de desconto e os cálculos com os valores reais do cardápio. `OrderServiceTests` cobre o CRUD completo e todos os casos de erro.
